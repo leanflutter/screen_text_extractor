@@ -18,6 +18,6 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    expect(await ScreenTextExtractor.platformVersion, '42');
+    expect(await ScreenTextExtractor.instance.platformVersion, '42');
   });
 }
