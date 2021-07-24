@@ -77,11 +77,11 @@ class _HomePageState extends State<HomePage> {
     await HotKeyManager.instance.register(
       _hotKey,
       keyDownHandler: () async {
-        ExtractedResult result = await ScreenTextExtractor.instance.extract();
+        ExtractedData result = await ScreenTextExtractor.instance.extract();
         BotToast.showText(text: 'result: ${result.toJson()}');
       },
       keyUpHandler: () async {
-        // ExtractedResult result = await ScreenTextExtractor.instance.extract();
+        // ExtractedData result = await ScreenTextExtractor.instance.extract();
         // BotToast.showText(text: 'result: ${result.toJson()}');
       },
     );
@@ -101,6 +101,13 @@ class _HomePageState extends State<HomePage> {
           onTap: () async {
             bool _isEnabled = await ScreenTextExtractor.instance.isEnabled();
             BotToast.showText(text: '_isEnabled: $_isEnabled');
+          },
+        ),
+        _ListItem(
+          title: Text('extract'),
+          onTap: () async {
+            ExtractedData data = await ScreenTextExtractor.instance.extract(ExtractMode.screenCapture);
+            BotToast.showText(text: '${data.toJson()}');
           },
         ),
       ],

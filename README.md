@@ -54,7 +54,7 @@ dependencies:
 import 'package:screen_text_extractor/screen_text_extractor.dart';
 
 
-ExtractedResult result = await ScreenTextExtractor.instance.extract();
+ExtractedData result = await ScreenTextExtractor.instance.extract();
 ```
 
 > Please see the example app of this plugin for a full example.

@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-import './extracted_result.dart';
+import 'extracted_data.dart';
 
 enum ExtractMode {
   clipboard,
-  screenshot,
-  selection,
+  screenCapture,
+  screenSelection,
 }
 
 class ScreenTextExtractor {
@@ -26,23 +26,28 @@ class ScreenTextExtractor {
     return await _channel.invokeMethod('isEnabled');
   }
 
-  Future<ExtractedResult> extract([
-    ExtractMode mode = ExtractMode.selection,
+  Future<ExtractedData> extract([
+    ExtractMode mode = ExtractMode.screenSelection,
   ]) async {
-    ExtractedResult? extractedResult;
+    ExtractedData? extractedData;
     if (mode == ExtractMode.clipboard) {
       ClipboardData? clipboardData =
           await Clipboard.getData(Clipboard.kTextPlain);
-      extractedResult = ExtractedResult(
+      extractedData = ExtractedData(
         text: clipboardData?.text,
       );
-    } else if (mode == ExtractMode.selection) {
+    } else if (mode == ExtractMode.screenCapture) {
       final Map<dynamic, dynamic> resultData =
-          await _channel.invokeMethod('extractFromSelection');
-      extractedResult =
-          ExtractedResult.fromJson(Map<String, dynamic>.from(resultData));
+          await _channel.invokeMethod('extractFromScreenCapture');
+      extractedData =
+          ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+    } else if (mode == ExtractMode.screenSelection) {
+      final Map<dynamic, dynamic> resultData =
+          await _channel.invokeMethod('extractFromScreenSelection');
+      extractedData =
+          ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
     }
 
-    return extractedResult!;
+    return extractedData!;
   }
 }

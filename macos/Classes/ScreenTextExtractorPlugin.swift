@@ -2,6 +2,8 @@ import Cocoa
 import FlutterMacOS
 
 public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
+    let tmpDir: String = NSTemporaryDirectory()
+    
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "screen_text_extractor", binaryMessenger: registrar.messenger)
         let instance = ScreenTextExtractorPlugin()
@@ -16,8 +18,11 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         case "isEnabled":
             isEnabled(call, result: result)
             break
-        case "extractFromSelection":
-            extractFromSelection(call, result: result)
+        case "extractFromScreenCapture":
+            extractFromScreenCapture(call, result: result)
+            break
+        case "extractFromScreenSelection":
+            extractFromScreenSelection(call, result: result)
             break
         default:
             result(FlutterMethodNotImplemented)
@@ -33,7 +38,22 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         result(AXIsProcessTrusted())
     }
     
-    public func extractFromSelection(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let imagePath: String = "\(self.tmpDir)captureRegion.png"
+        
+        let task = Process()
+        task.launchPath = "/usr/sbin/screencapture"
+        task.arguments = ["-i", "-r", imagePath]
+        task.launch()
+        task.waitUntilExit()
+
+        let resultData: NSDictionary = [
+            "imagePath": imagePath,
+        ]
+        result(resultData)
+    }
+    
+    public func extractFromScreenSelection(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         var text: String = ""
         
         let systemWideElement = AXUIElementCreateSystemWide()
