@@ -10,8 +10,9 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-        case "getPlatformVersion":
-            result("macOS " + ProcessInfo.processInfo.operatingSystemVersionString)
+        case "requestEnable":
+            requestEnable(call, result: result)
+            break
         case "isEnabled":
             isEnabled(call, result: result)
             break
@@ -21,6 +22,11 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+    
+    public func requestEnable(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        NSWorkspace.shared.open(prefpaneUrl)
     }
     
     public func isEnabled(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -35,12 +41,26 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         
         let error = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
         if (error != .success){
-            print("Couldn't get the focused element.")
-        } else {
-            var selectedTextValue: AnyObject?
-            let selectedTextError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
-            if (selectedTextError == .success) {
-                text = selectedTextValue as! String
+            result(FlutterError(code: "unknown", message: "Couldn't get the focused element.", details: nil))
+            return
+        }
+        
+        var selectedTextValue: AnyObject?
+        let selectedTextError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
+        if (selectedTextError == .success) {
+            text = selectedTextValue as! String
+        }
+        
+        if (text.isEmpty) {
+            // Extract text in the WebKit application
+            var selectedTextMarkerRangeValue: AnyObject?
+            let selectedTextMarkerRangeError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, "AXSelectedTextMarkerRange" as CFString, &selectedTextMarkerRangeValue);
+            if (selectedTextMarkerRangeError == .success) {
+                var stringForTextMarkerRangeValue: AnyObject?
+                let stringForTextMarkerRangeError = AXUIElementCopyParameterizedAttributeValue(focusedElement as! AXUIElement, "AXAttributedStringForTextMarkerRange" as CFString, selectedTextMarkerRangeValue!, &stringForTextMarkerRangeValue);
+                if (stringForTextMarkerRangeError == .success) {
+                    text = (stringForTextMarkerRangeValue as! NSAttributedString).string
+                }
             }
         }
         

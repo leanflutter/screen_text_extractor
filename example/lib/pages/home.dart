@@ -76,12 +76,13 @@ class _HomePageState extends State<HomePage> {
 
     await HotKeyManager.instance.register(
       _hotKey,
-      keyDownHandler: () {
-        print('onKeyDown+${_hotKey.toJson()}');
-      },
-      keyUpHandler: () async {
+      keyDownHandler: () async {
         ExtractedResult result = await ScreenTextExtractor.instance.extract();
         BotToast.showText(text: 'result: ${result.toJson()}');
+      },
+      keyUpHandler: () async {
+        // ExtractedResult result = await ScreenTextExtractor.instance.extract();
+        // BotToast.showText(text: 'result: ${result.toJson()}');
       },
     );
   }
@@ -89,6 +90,12 @@ class _HomePageState extends State<HomePage> {
   Widget _buildBody(BuildContext context) {
     return Column(
       children: <Widget>[
+        _ListItem(
+          title: Text('requestEnable'),
+          onTap: () async {
+            await ScreenTextExtractor.instance.requestEnable();
+          },
+        ),
         _ListItem(
           title: Text('isEnabled'),
           onTap: () async {
