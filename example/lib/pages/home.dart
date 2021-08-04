@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:screen_text_extractor/screen_text_extractor.dart';
+import 'package:path_provider/path_provider.dart';
 
 class _ListItem extends StatelessWidget {
   final Widget? title;
@@ -106,8 +109,25 @@ class _HomePageState extends State<HomePage> {
         _ListItem(
           title: Text('extract'),
           onTap: () async {
-            ExtractedData data = await ScreenTextExtractor.instance.extract(ExtractMode.screenCapture);
+            Directory directory = await getApplicationDocumentsDirectory();
+            String imagePath =
+                '${directory.path}/screen_text_extractor_example/Screenshot-${new DateTime.now().millisecondsSinceEpoch}.png';
+            ExtractedData data = await ScreenTextExtractor.instance.extract(
+              mode: ExtractMode.screenCapture,
+              imagePath: imagePath,
+            );
             BotToast.showText(text: '${data.toJson()}');
+          },
+        ),
+        _ListItem(
+          title: Text('extract2ER'),
+          onTap: () {
+            Future.delayed(Duration(seconds: 2)).then((value) async {
+              ExtractedData data = await ScreenTextExtractor.instance.extract(
+                mode: ExtractMode.screenSelection,
+              );
+              BotToast.showText(text: '${data.toJson()}');
+            });
           },
         ),
       ],

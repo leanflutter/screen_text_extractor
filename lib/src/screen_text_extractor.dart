@@ -26,28 +26,41 @@ class ScreenTextExtractor {
     return await _channel.invokeMethod('isEnabled');
   }
 
-  Future<ExtractedData> extract([
+  Future<ExtractedData> extract({
     ExtractMode mode = ExtractMode.screenSelection,
-  ]) async {
+    String? imagePath,
+  }) async {
     ExtractedData? extractedData;
     if (mode == ExtractMode.clipboard) {
-      ClipboardData? clipboardData =
-          await Clipboard.getData(Clipboard.kTextPlain);
-      extractedData = ExtractedData(
-        text: clipboardData?.text,
-      );
+      extractedData = await extractFromClipboard();
     } else if (mode == ExtractMode.screenCapture) {
-      final Map<dynamic, dynamic> resultData =
-          await _channel.invokeMethod('extractFromScreenCapture');
-      extractedData =
-          ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+      extractedData = await extractFromScreenCapture(imagePath!);
     } else if (mode == ExtractMode.screenSelection) {
-      final Map<dynamic, dynamic> resultData =
-          await _channel.invokeMethod('extractFromScreenSelection');
-      extractedData =
-          ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+      extractedData = await extractFromScreenSelection();
     }
-
     return extractedData!;
+  }
+
+  Future<ExtractedData> extractFromClipboard() async {
+    ClipboardData? clipboardData =
+        await Clipboard.getData(Clipboard.kTextPlain);
+    return ExtractedData(
+      text: clipboardData?.text,
+    );
+  }
+
+  Future<ExtractedData> extractFromScreenCapture(String imagePath) async {
+    final Map<String, dynamic> arguments = {
+      'imagePath': imagePath,
+    };
+    final Map<dynamic, dynamic> resultData =
+        await _channel.invokeMethod('extractFromScreenCapture', arguments);
+    return ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+  }
+
+  Future<ExtractedData> extractFromScreenSelection() async {
+    final Map<dynamic, dynamic> resultData =
+        await _channel.invokeMethod('extractFromScreenSelection');
+    return ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
   }
 }

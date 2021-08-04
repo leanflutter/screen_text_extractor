@@ -28,6 +28,7 @@ dependencies:
     git:
       url: https://github.com/leanflutter/hotkey_manager
       ref: main
+  path_provider: ^2.0.2
 
 dev_dependencies:
   flutter_test:
