@@ -79,11 +79,13 @@ class _HomePageState extends State<HomePage> {
 
     await HotKeyManager.instance.register(
       _hotKey,
-      keyDownHandler: () async {
-        ExtractedData result = await ScreenTextExtractor.instance.extract();
+      keyDownHandler: (HotKey hotKey) async {
+        ExtractedData result = await ScreenTextExtractor.instance.extract(
+          simulateCopyShortcut: true,
+        );
         BotToast.showText(text: 'result: ${result.toJson()}');
       },
-      keyUpHandler: () async {
+      keyUpHandler: (HotKey hotKey) async {
         // ExtractedData result = await ScreenTextExtractor.instance.extract();
         // BotToast.showText(text: 'result: ${result.toJson()}');
       },

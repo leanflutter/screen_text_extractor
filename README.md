@@ -25,7 +25,7 @@ This plugin allows Flutter **desktop** apps to extract text from screen.
 
 | MacOS | Linux | Windows |
 | :---: | :---: | :-----: |
-|  ✔️   |  ➖   |   ➖    |
+|  ✔️   |  ✔️   |   ➖    |
 
 ## Quick Start
 
@@ -54,7 +54,7 @@ dependencies:
 import 'package:screen_text_extractor/screen_text_extractor.dart';
 
 
-ExtractedData result = await ScreenTextExtractor.instance.extract();
+ExtractedData data = await ScreenTextExtractor.instance.extract();
 ```
 
 > Please see the example app of this plugin for a full example.

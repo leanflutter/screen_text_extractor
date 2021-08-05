@@ -1,3 +1,4 @@
+import Carbon
 import Cocoa
 import FlutterMacOS
 
@@ -39,14 +40,15 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     }
     
     public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let imagePath: String = "\(self.tmpDir)captureRegion.png"
+        let args:[String: Any] = call.arguments as! [String: Any]
+        let imagePath: String = args["imagePath"] as! String
         
         let task = Process()
         task.launchPath = "/usr/sbin/screencapture"
         task.arguments = ["-i", "-r", imagePath]
         task.launch()
         task.waitUntilExit()
-
+        
         let resultData: NSDictionary = [
             "imagePath": imagePath,
         ]
@@ -54,39 +56,59 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     }
     
     public func extractFromScreenSelection(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args:[String: Any] = call.arguments as! [String: Any]
+        let simulateCopyShortcut: Bool = args["simulateCopyShortcut"] as! Bool
+
         var text: String = ""
         
         let systemWideElement = AXUIElementCreateSystemWide()
         var focusedElement : AnyObject?
         
         let error = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
-        if (error != .success){
-            result(FlutterError(code: "unknown", message: "Couldn't get the focused element.", details: nil))
-            return
-        }
-        
-        var selectedTextValue: AnyObject?
-        let selectedTextError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
-        if (selectedTextError == .success) {
-            text = selectedTextValue as! String
-        }
-        
-        if (text.isEmpty) {
-            // Extract text in the WebKit application
-            var selectedTextMarkerRangeValue: AnyObject?
-            let selectedTextMarkerRangeError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, "AXSelectedTextMarkerRange" as CFString, &selectedTextMarkerRangeValue);
-            if (selectedTextMarkerRangeError == .success) {
-                var stringForTextMarkerRangeValue: AnyObject?
-                let stringForTextMarkerRangeError = AXUIElementCopyParameterizedAttributeValue(focusedElement as! AXUIElement, "AXAttributedStringForTextMarkerRange" as CFString, selectedTextMarkerRangeValue!, &stringForTextMarkerRangeValue);
-                if (stringForTextMarkerRangeError == .success) {
-                    text = (stringForTextMarkerRangeValue as! NSAttributedString).string
+        if (error == .success){
+            var selectedTextValue: AnyObject?
+            let selectedTextError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
+            if (selectedTextError == .success) {
+                text = selectedTextValue as! String
+            }
+            
+            if (text.isEmpty) {
+                // Extract text in the WebKit application
+                var selectedTextMarkerRangeValue: AnyObject?
+                let selectedTextMarkerRangeError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, "AXSelectedTextMarkerRange" as CFString, &selectedTextMarkerRangeValue);
+                if (selectedTextMarkerRangeError == .success) {
+                    var stringForTextMarkerRangeValue: AnyObject?
+                    let stringForTextMarkerRangeError = AXUIElementCopyParameterizedAttributeValue(focusedElement as! AXUIElement, "AXAttributedStringForTextMarkerRange" as CFString, selectedTextMarkerRangeValue!, &stringForTextMarkerRangeValue);
+                    if (stringForTextMarkerRangeError == .success) {
+                        text = (stringForTextMarkerRangeValue as! NSAttributedString).string
+                    }
                 }
             }
         }
         
-        let resultData: NSDictionary = [
-            "text": text,
-        ]
-        result(resultData)
+        // 通过模拟按下 Command+C 键以提取选中的文字
+        if (text.isEmpty && simulateCopyShortcut) {
+            let copiedString = NSPasteboard.general.string(forType: .string)
+                        
+            let eventKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(UInt32(kVK_ANSI_C)), keyDown: true);
+            eventKeyDown!.flags = CGEventFlags.maskCommand;
+            eventKeyDown!.post(tap: CGEventTapLocation.cghidEventTap);
+            
+            let deadlineTime = DispatchTime.now() + .milliseconds(100)
+            DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+                text = NSPasteboard.general.string(forType: .string) ?? "";
+                if (!((copiedString ?? "").isEmpty)) {
+                    NSPasteboard.general.pasteboardItems?.first?.setString(copiedString!, forType: .string)
+                } else {
+                    NSPasteboard.general.clearContents()
+                }
+                
+                let resultData: NSDictionary = ["text": text]
+                result(resultData)
+            }
+        } else {
+            let resultData: NSDictionary = ["text": text]
+            result(resultData)
+        }
     }
 }

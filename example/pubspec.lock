@@ -100,10 +100,10 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: ff18aeb13984f8913f79c9bdc900a768ce2bb26d
+      resolved-ref: "2d48b307b7813a76f6550e9c5ed264101b8266f2"
       url: "https://github.com/leanflutter/hotkey_manager"
     source: git
-    version: "0.0.1"
+    version: "0.0.3"
   matcher:
     dependency: transitive
     description:

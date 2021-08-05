@@ -18,6 +18,6 @@ class ExtractedData {
     return {
       'text': text,
       'imagePath': imagePath,
-    };
+    }..removeWhere((key, value) => value == null);
   }
 }
