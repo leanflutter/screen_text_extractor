@@ -44,27 +44,39 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
             result(false)
         };
     }
-
+    
     public func requestScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if #available(macOS 10.15, *) {
-            CGRequestScreenCaptureAccess()
+        let args:[String: Any] = call.arguments as! [String: Any]
+        let onlyOpenPrefPane: Bool = args["onlyOpenPrefPane"] as! Bool
+        
+        if (!onlyOpenPrefPane) {
+            if #available(macOS 10.15, *) {
+                CGRequestScreenCaptureAccess()
+            } else {
+                // Fallback on earlier versions
+            }
         } else {
-            // Fallback on earlier versions
+            let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
+            NSWorkspace.shared.open(prefpaneUrl)
         }
-        // let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
-        // NSWorkspace.shared.open(prefpaneUrl)
         result(true)
     }
-
+    
     public func isAllowedScreenSelectionAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         result(AXIsProcessTrusted())
     }
-
+    
     public func requestScreenSelectionAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
-        // let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-        // NSWorkspace.shared.open(prefpaneUrl)
+        let args:[String: Any] = call.arguments as! [String: Any]
+        let onlyOpenPrefPane: Bool = args["onlyOpenPrefPane"] as! Bool
+        
+        if (!onlyOpenPrefPane) {
+            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+            AXIsProcessTrustedWithOptions(options)
+        } else  {
+            let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+            NSWorkspace.shared.open(prefpaneUrl)
+        }
         result(true)
     }
     
@@ -87,7 +99,7 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     public func extractFromScreenSelection(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let simulateCopyShortcut: Bool = args["simulateCopyShortcut"] as! Bool
-
+        
         var text: String = ""
         
         let systemWideElement = AXUIElementCreateSystemWide()
@@ -118,7 +130,7 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         // 通过模拟按下 Command+C 键以提取选中的文字
         if (text.isEmpty && simulateCopyShortcut) {
             let copiedString = NSPasteboard.general.string(forType: .string)
-                        
+            
             let eventKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(UInt32(kVK_ANSI_C)), keyDown: true);
             eventKeyDown!.flags = CGEventFlags.maskCommand;
             eventKeyDown!.post(tap: CGEventTapLocation.cghidEventTap);

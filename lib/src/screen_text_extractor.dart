@@ -23,16 +23,26 @@ class ScreenTextExtractor {
     return await _channel.invokeMethod('isAllowedScreenCaptureAccess');
   }
 
-  Future<void> requestScreenCaptureAccess() async {
-    await _channel.invokeMethod('requestScreenCaptureAccess');
+  Future<void> requestScreenCaptureAccess({
+    bool onlyOpenPrefPane = false,
+  }) async {
+    final Map<String, dynamic> arguments = {
+      'onlyOpenPrefPane': onlyOpenPrefPane,
+    };
+    await _channel.invokeMethod('requestScreenCaptureAccess', arguments);
   }
 
   Future<bool> isAllowedScreenSelectionAccess() async {
     return await _channel.invokeMethod('isAllowedScreenSelectionAccess');
   }
 
-  Future<void> requestScreenSelectionAccess() async {
-    await _channel.invokeMethod('requestScreenSelectionAccess');
+  Future<void> requestScreenSelectionAccess({
+    bool onlyOpenPrefPane = false,
+  }) async {
+    final Map<String, dynamic> arguments = {
+      'onlyOpenPrefPane': onlyOpenPrefPane,
+    };
+    await _channel.invokeMethod('requestScreenSelectionAccess', arguments);
   }
 
   Future<ExtractedData> extract({
