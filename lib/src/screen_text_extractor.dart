@@ -20,18 +20,22 @@ class ScreenTextExtractor {
   MethodChannel _channel = const MethodChannel('screen_text_extractor');
 
   Future<bool> isAllowedScreenCaptureAccess() async {
+    if (Platform.isLinux) return true;
     return await _channel.invokeMethod('isAllowedScreenCaptureAccess');
   }
 
   Future<void> requestScreenCaptureAccess() async {
+    if (Platform.isLinux) return;
     await _channel.invokeMethod('requestScreenCaptureAccess');
   }
 
   Future<bool> isAllowedScreenSelectionAccess() async {
+    if (Platform.isLinux) return true;
     return await _channel.invokeMethod('isAllowedScreenSelectionAccess');
   }
 
   Future<void> requestScreenSelectionAccess() async {
+    if (Platform.isLinux) return;
     await _channel.invokeMethod('requestScreenSelectionAccess');
   }
 
