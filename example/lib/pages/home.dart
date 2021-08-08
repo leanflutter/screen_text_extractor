@@ -4,59 +4,19 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:preference_list/preference_list.dart';
 import 'package:screen_text_extractor/screen_text_extractor.dart';
 import 'package:path_provider/path_provider.dart';
 
-class _ListItem extends StatelessWidget {
-  final Widget? title;
-  final Widget? subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
+final hotKeyManager = HotKeyManager.instance;
+final screenTextExtractor = ScreenTextExtractor.instance;
 
-  const _ListItem({
-    Key? key,
-    this.title,
-    this.subtitle,
-    this.trailing,
-    this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        constraints: BoxConstraints(minHeight: 48),
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 8,
-          bottom: 8,
-        ),
-        alignment: Alignment.centerLeft,
-        child: Column(
-          children: [
-            Row(
-              children: [
-                DefaultTextStyle(
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 15,
-                  ),
-                  child: title!,
-                ),
-                Expanded(child: Container()),
-                if (trailing != null) SizedBox(height: 34, child: trailing),
-              ],
-            ),
-            if (subtitle != null) Container(child: subtitle),
-          ],
-        ),
-      ),
-      onTap: this.onTap,
-    );
-  }
-}
+final kShortcutExtractFromClipboard =
+    HotKey(KeyCode.keyZ, modifiers: [KeyModifier.alt]);
+final kShortcutExtractFromScreenCapture =
+    HotKey(KeyCode.keyX, modifiers: [KeyModifier.alt]);
+final kShortcutExtractFromScreenSelection =
+    HotKey(KeyCode.keyC, modifiers: [KeyModifier.alt]);
 
 class HomePage extends StatefulWidget {
   @override
@@ -64,73 +24,130 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isAllowedScreenCaptureAccess = false;
+  bool _isAllowedScreenSelectionAccess = false;
+
   @override
   void initState() {
-    _init();
     super.initState();
+    _init();
   }
 
-  _init() async {
-    // ⌥ + w
-    HotKey _hotKey = HotKey(
-      KeyCode.keyW,
-      modifiers: [KeyModifier.alt],
+  void _init() async {
+    // 初始化快捷键
+    hotKeyManager.register(
+      kShortcutExtractFromClipboard,
+      keyDownHandler: (_) {
+        _handleExtractTextFromClipboard();
+      },
     );
+    hotKeyManager.register(
+      kShortcutExtractFromScreenSelection,
+      keyDownHandler: (_) {
+        _handleExtractTextFromScreenSelection();
+      },
+    );
+    hotKeyManager.register(
+      kShortcutExtractFromScreenCapture,
+      keyDownHandler: (_) {
+        _handleExtractTextFromScreenCapture();
+      },
+    );
+    _isAllowedScreenCaptureAccess =
+        await screenTextExtractor.isAllowedScreenCaptureAccess();
+    _isAllowedScreenSelectionAccess =
+        await screenTextExtractor.isAllowedScreenSelectionAccess();
+    setState(() {});
+  }
 
-    await HotKeyManager.instance.register(
-      _hotKey,
-      keyDownHandler: (HotKey hotKey) async {
-        ExtractedData result = await ScreenTextExtractor.instance.extract(
-          simulateCopyShortcut: true,
-        );
-        BotToast.showText(text: 'result: ${result.toJson()}');
-      },
-      keyUpHandler: (HotKey hotKey) async {
-        // ExtractedData result = await ScreenTextExtractor.instance.extract();
-        // BotToast.showText(text: 'result: ${result.toJson()}');
-      },
+  void _handleExtractTextFromScreenSelection() async {
+    ExtractedData extractedData = await screenTextExtractor.extract(
+      mode: ExtractMode.screenSelection,
     );
+    BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
+  }
+
+  void _handleExtractTextFromScreenCapture() async {
+    Directory directory = await getApplicationDocumentsDirectory();
+    String fileName = 'Screenshot-${DateTime.now().millisecondsSinceEpoch}.png';
+    ExtractedData extractedData = await screenTextExtractor.extract(
+      mode: ExtractMode.screenCapture,
+      imagePath:
+          '${directory.path}/screen_text_extractor_example/Screenshots/$fileName',
+    );
+    BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
+  }
+
+  void _handleExtractTextFromClipboard() async {
+    ExtractedData extractedData = await screenTextExtractor.extract(
+      mode: ExtractMode.clipboard,
+    );
+    BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }
 
   Widget _buildBody(BuildContext context) {
-    return Column(
+    return PreferenceList(
       children: <Widget>[
-        _ListItem(
-          title: Text('requestEnable'),
-          onTap: () async {
-            await ScreenTextExtractor.instance.requestEnable();
-          },
+        PreferenceListSection(
+          children: [
+            PreferenceListItem(
+              title: Text('isAllowedScreenCaptureAccess'),
+              accessoryView: Text('$_isAllowedScreenCaptureAccess'),
+              onTap: () async {
+                bool allowed = await ScreenTextExtractor.instance
+                    .isAllowedScreenCaptureAccess();
+                BotToast.showText(text: 'allowed: $allowed');
+                setState(() {
+                  _isAllowedScreenCaptureAccess = allowed;
+                });
+              },
+            ),
+            PreferenceListItem(
+              title: Text('requestScreenCaptureAccess'),
+              onTap: () async {
+                await ScreenTextExtractor.instance.requestScreenCaptureAccess();
+              },
+            ),
+            PreferenceListItem(
+              title: Text('isAllowedScreenSelectionAccess'),
+              accessoryView: Text('$_isAllowedScreenSelectionAccess'),
+              onTap: () async {
+                bool allowed = await ScreenTextExtractor.instance
+                    .isAllowedScreenSelectionAccess();
+                BotToast.showText(text: 'allowed: $allowed');
+                setState(() {
+                  _isAllowedScreenSelectionAccess = allowed;
+                });
+              },
+            ),
+            PreferenceListItem(
+              title: Text('requestScreenSelectionAccess'),
+              onTap: () async {
+                await ScreenTextExtractor.instance
+                    .requestScreenSelectionAccess();
+              },
+            ),
+          ],
         ),
-        _ListItem(
-          title: Text('isEnabled'),
-          onTap: () async {
-            bool _isEnabled = await ScreenTextExtractor.instance.isEnabled();
-            BotToast.showText(text: '_isEnabled: $_isEnabled');
-          },
-        ),
-        _ListItem(
-          title: Text('extract'),
-          onTap: () async {
-            Directory directory = await getApplicationDocumentsDirectory();
-            String imagePath =
-                '${directory.path}/screen_text_extractor_example/Screenshot-${new DateTime.now().millisecondsSinceEpoch}.png';
-            ExtractedData data = await ScreenTextExtractor.instance.extract(
-              mode: ExtractMode.screenCapture,
-              imagePath: imagePath,
-            );
-            BotToast.showText(text: '${data.toJson()}');
-          },
-        ),
-        _ListItem(
-          title: Text('extract2ER'),
-          onTap: () {
-            Future.delayed(Duration(seconds: 2)).then((value) async {
-              ExtractedData data = await ScreenTextExtractor.instance.extract(
-                mode: ExtractMode.screenSelection,
-              );
-              BotToast.showText(text: '${data.toJson()}');
-            });
-          },
+        PreferenceListSection(
+          title: Text('Methods'),
+          children: [
+            PreferenceListItem(
+              title: Text('extractTextFromClipboard'),
+              detailText: Text(kShortcutExtractFromClipboard.toString()),
+              onTap: _handleExtractTextFromClipboard,
+            ),
+            PreferenceListItem(
+              title: Text('extractTextFromScreenCapture'),
+              detailText: Text(kShortcutExtractFromScreenCapture.toString()),
+              onTap: _handleExtractTextFromScreenCapture,
+            ),
+            PreferenceListItem(
+              title: Text('extractTextFromScreenSelection'),
+              detailText: Text(kShortcutExtractFromScreenSelection.toString()),
+              onTap: _handleExtractTextFromScreenSelection,
+            ),
+          ],
         ),
       ],
     );

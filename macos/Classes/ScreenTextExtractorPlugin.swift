@@ -13,11 +13,17 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-        case "requestEnable":
-            requestEnable(call, result: result)
+        case "isAllowedScreenCaptureAccess":
+            isAllowedScreenCaptureAccess(call, result: result)
             break
-        case "isEnabled":
-            isEnabled(call, result: result)
+        case "requestScreenCaptureAccess":
+            requestScreenCaptureAccess(call, result: result)
+            break
+        case "isAllowedScreenSelectionAccess":
+            isAllowedScreenSelectionAccess(call, result: result)
+            break
+        case "requestScreenSelectionAccess":
+            requestScreenSelectionAccess(call, result: result)
             break
         case "extractFromScreenCapture":
             extractFromScreenCapture(call, result: result)
@@ -30,13 +36,36 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    public func requestEnable(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-        NSWorkspace.shared.open(prefpaneUrl)
+    public func isAllowedScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        if #available(macOS 10.15, *) {
+            result(CGPreflightScreenCaptureAccess())
+        } else {
+            // Fallback on earlier versions
+            result(false)
+        };
     }
-    
-    public func isEnabled(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+
+    public func requestScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        if #available(macOS 10.15, *) {
+            CGRequestScreenCaptureAccess()
+        } else {
+            // Fallback on earlier versions
+        }
+        // let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
+        // NSWorkspace.shared.open(prefpaneUrl)
+        result(true)
+    }
+
+    public func isAllowedScreenSelectionAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         result(AXIsProcessTrusted())
+    }
+
+    public func requestScreenSelectionAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue(): true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
+        // let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        // NSWorkspace.shared.open(prefpaneUrl)
+        result(true)
     }
     
     public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
