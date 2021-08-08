@@ -53,8 +53,11 @@ dependencies:
 ```dart
 import 'package:screen_text_extractor/screen_text_extractor.dart';
 
+ExtractedData data; 
 
-ExtractedData data = await ScreenTextExtractor.instance.extract();
+data = await ScreenTextExtractor.instance.extractFromClipboard();
+data = await ScreenTextExtractor.instance.extractFromScreenCapture();
+data = await ScreenTextExtractor.instance.extractFromScreenSelection();
 ```
 
 > Please see the example app of this plugin for a full example.
@@ -63,9 +66,16 @@ ExtractedData data = await ScreenTextExtractor.instance.extract();
 
 ### ScreenTextExtractor
 
-| Method  | Description |
-| ------- | ----------- |
-| extract |             |
+| Method | Description |
+| ------ | ----------- |
+| isAllowedScreenCaptureAccess | |
+| requestScreenCaptureAccess | |
+| isAllowedScreenSelectionAccess | |
+| requestScreenSelectionAccess | |
+| extract | |
+| extractFromClipboard | |
+| extractFromScreenCapture | |
+| extractFromScreenSelection | |
 
 ## License
 
