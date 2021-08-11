@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'extracted_data.dart';
@@ -20,6 +21,7 @@ class ScreenTextExtractor {
   MethodChannel _channel = const MethodChannel('screen_text_extractor');
 
   Future<bool> isAllowedScreenCaptureAccess() async {
+    if (kIsWeb) return true;
     if (Platform.isLinux) return true;
     return await _channel.invokeMethod('isAllowedScreenCaptureAccess');
   }
@@ -35,6 +37,7 @@ class ScreenTextExtractor {
   }
 
   Future<bool> isAllowedScreenSelectionAccess() async {
+    if (kIsWeb) return true;
     if (Platform.isLinux) return true;
     return await _channel.invokeMethod('isAllowedScreenSelectionAccess');
   }

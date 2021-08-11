@@ -95,15 +95,25 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_web_plugins:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   hotkey_manager:
     dependency: "direct main"
     description:
-      path: "."
-      ref: main
-      resolved-ref: "2d48b307b7813a76f6550e9c5ed264101b8266f2"
-      url: "https://github.com/leanflutter/hotkey_manager"
-    source: git
+      path: "../../hotkey_manager"
+      relative: true
+    source: path
     version: "0.0.3"
+  js:
+    dependency: transitive
+    description:
+      name: js
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.6.3"
   matcher:
     dependency: transitive
     description:
