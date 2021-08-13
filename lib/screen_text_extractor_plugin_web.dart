@@ -40,8 +40,21 @@ class ScreenTextExtractorPlugin {
     }
   }
 
-  Future<Map<dynamic, dynamic>> extractFromScreenCapture(MethodCall call) {
-    return Future.value({});
+  Future<Map<dynamic, dynamic>> extractFromScreenCapture(
+    MethodCall call,
+  ) {
+    Completer<Map<dynamic, dynamic>> completer = Completer();
+    js.context.callMethod(
+      'screenTextExtractorExtractFromScreenCapture',
+      [
+        js.JsFunction.withThis((_, dynamic data) {
+          completer.complete({
+            'base64Image': data['base64Image'],
+          });
+        })
+      ],
+    );
+    return completer.future;
   }
 
   Future<Map<dynamic, dynamic>> extractFromScreenSelection(MethodCall call) {

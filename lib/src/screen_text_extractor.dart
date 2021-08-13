@@ -79,15 +79,18 @@ class ScreenTextExtractor {
   Future<ExtractedData> extractFromScreenCapture(
     String? imagePath,
   ) async {
-    if (imagePath == null) throw ArgumentError.notNull('imagePath');
+    Map<String, dynamic> arguments = {};
+    if (!kIsWeb) {
+      if (imagePath == null) throw ArgumentError.notNull('imagePath');
 
-    File imageFile = File(imagePath);
-    if (!imageFile.parent.existsSync()) {
-      imageFile.parent.create(recursive: true);
+      File imageFile = File(imagePath);
+      if (!imageFile.parent.existsSync()) {
+        imageFile.parent.create(recursive: true);
+      }
+      arguments = {
+        'imagePath': imagePath,
+      };
     }
-    final Map<String, dynamic> arguments = {
-      'imagePath': imagePath,
-    };
     final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
       'extractFromScreenCapture',
       arguments,

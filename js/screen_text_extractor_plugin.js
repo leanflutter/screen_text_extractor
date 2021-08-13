@@ -1,8 +1,38 @@
-var _window = window.parent;
-var _document = window.parent.document;
+var _parentWindow = window.parent;
+var _parentDocument = window.parent.document;
+
+function screenTextExtractorExtractFromScreenCapture(cb) {
+  const body = _parentDocument.body;
+  _parentWindow.domtoimage.toPng(body).then(function (dataUrl) {
+    const imageWidth = body.scrollWidth;
+    const imageHeight = body.scrollHeight;
+    var image = new Image();
+    image.src = dataUrl;
+    image.style.width = imageWidth + "px";
+    image.style.height = imageHeight + "px";
+    _parentDocument.body.appendChild(image);
+    const cropper = new _parentWindow.Cropper(image, {
+      minContainerWidth: imageWidth,
+      minContainerHeight: imageHeight,
+      autoCrop: false,
+      zoomable: false,
+      zoomOnTouch: false,
+      zoomOnWheel: false,
+      cropend: function () {
+        var croppedCanvas = cropper.getCroppedCanvas();
+        var base64Image = croppedCanvas.toDataURL("image/png");
+
+        image.remove();
+        cropper.destroy();
+
+        cb({ base64Image: base64Image.replace('data:image/png;base64,', '') });
+      },
+    });
+  });
+}
 
 function screenTextExtractorExtractFromScreenSelection() {
-  const selection = _document.getSelection();
+  const selection = _parentDocument.getSelection();
 
   if (selection.rangeCount === 0) return;
 
