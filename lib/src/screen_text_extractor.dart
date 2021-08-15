@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -95,7 +96,17 @@ class ScreenTextExtractor {
       'extractFromScreenCapture',
       arguments,
     );
-    return ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+
+    ExtractedData extractedData =
+        ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+    if (extractedData.base64Image == null) {
+      File imageFile = File(imagePath!);
+      if (imageFile.existsSync()) {
+        List<int> imageBytes = imageFile.readAsBytesSync();
+        extractedData.base64Image = base64Encode(imageBytes);
+      }
+    }
+    return extractedData;
   }
 
   Future<ExtractedData> extractFromScreenSelection(
