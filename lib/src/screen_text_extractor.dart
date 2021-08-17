@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'extracted_data.dart';
@@ -102,7 +104,10 @@ class ScreenTextExtractor {
     if (extractedData.base64Image == null) {
       File imageFile = File(imagePath!);
       if (imageFile.existsSync()) {
-        List<int> imageBytes = imageFile.readAsBytesSync();
+        Uint8List imageBytes = imageFile.readAsBytesSync();
+        var decodedImage = await decodeImageFromList(imageBytes);
+        extractedData.imageWidth = decodedImage.width.toDouble();
+        extractedData.imageHeight = decodedImage.height.toDouble();
         extractedData.base64Image = base64Encode(imageBytes);
       }
     }

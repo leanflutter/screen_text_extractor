@@ -49,6 +49,8 @@ class ScreenTextExtractorPlugin {
       [
         js.JsFunction.withThis((_, dynamic data) {
           completer.complete({
+            'imageWidth': data['imageWidth'],
+            'imageHeight': data['imageHeight'],
             'base64Image': data['base64Image'],
           });
         })
