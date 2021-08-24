@@ -44,7 +44,7 @@ Or
 dependencies:
   screen_text_extractor:
     git:
-      url: https://github.com/leanflutter/screen_text_extractor
+      url: https://github.com/leanflutter/screen_text_extractor.git
       ref: main
 ```
 
@@ -53,7 +53,7 @@ dependencies:
 ```dart
 import 'package:screen_text_extractor/screen_text_extractor.dart';
 
-ExtractedData data; 
+ExtractedData data;
 
 data = await ScreenTextExtractor.instance.extractFromClipboard();
 data = await ScreenTextExtractor.instance.extractFromScreenCapture();
@@ -66,16 +66,16 @@ data = await ScreenTextExtractor.instance.extractFromScreenSelection();
 
 ### ScreenTextExtractor
 
-| Method | Description |
-| ------ | ----------- |
-| isAllowedScreenCaptureAccess | |
-| requestScreenCaptureAccess | |
-| isAllowedScreenSelectionAccess | |
-| requestScreenSelectionAccess | |
-| extract | |
-| extractFromClipboard | |
-| extractFromScreenCapture | |
-| extractFromScreenSelection | |
+| Method                         | Description  | Linux | MacOS | Windows |
+| ------------------------------ | ------------ | ----- | ----- | ------- |
+| isAllowedScreenCaptureAccess   | `macOS` only | ➖    | ✔️    | ➖      |
+| requestScreenCaptureAccess     | `macOS` only | ➖    | ✔️    | ➖      |
+| isAllowedScreenSelectionAccess | `macOS` only | ➖    | ✔️    | ➖      |
+| requestScreenSelectionAccess   | `macOS` only | ➖    | ✔️    | ➖      |
+| extract                        |              | ✔️    | ✔️    | ✔️      |
+| extractFromClipboard           |              | ✔️    | ✔️    | ✔️      |
+| extractFromScreenCapture       |              | ✔️    | ✔️    | ➖      |
+| extractFromScreenSelection     |              | ✔️    | ✔️    | ➖      |
 
 ## License
 
