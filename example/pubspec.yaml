@@ -24,10 +24,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   bot_toast: ^4.0.1
-  hotkey_manager:
-    git:
-      url: https://github.com/leanflutter/hotkey_manager
-      ref: main
+  hotkey_manager: ^0.1.0
   path_provider: ^2.0.2
   preference_list: ^0.0.1
 
@@ -35,9 +32,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-dependency_overrides:
-  hotkey_manager:
-    path: ../../hotkey_manager
+# dependency_overrides:
+#   hotkey_manager:
+#     path: ../../hotkey_manager
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -51,9 +48,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-    - packages/hotkey_manager/js/
-    - packages/screen_text_extractor/js/
+  # assets:
+  #   - packages/hotkey_manager/web/
+  #   - packages/screen_text_extractor/web/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

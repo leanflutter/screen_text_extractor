@@ -103,10 +103,10 @@ packages:
   hotkey_manager:
     dependency: "direct main"
     description:
-      path: "../../hotkey_manager"
-      relative: true
-    source: path
-    version: "0.0.3"
+      name: hotkey_manager
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   js:
     dependency: transitive
     description:

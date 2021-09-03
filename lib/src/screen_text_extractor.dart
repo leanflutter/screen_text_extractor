@@ -26,6 +26,7 @@ class ScreenTextExtractor {
   Future<bool> isAllowedScreenCaptureAccess() async {
     if (kIsWeb) return true;
     if (Platform.isLinux) return true;
+    if (Platform.isWindows) return true;
     return await _channel.invokeMethod('isAllowedScreenCaptureAccess');
   }
 
@@ -33,6 +34,7 @@ class ScreenTextExtractor {
     bool onlyOpenPrefPane = false,
   }) async {
     if (Platform.isLinux) return;
+    if (Platform.isWindows) return;
     final Map<String, dynamic> arguments = {
       'onlyOpenPrefPane': onlyOpenPrefPane,
     };
@@ -42,6 +44,7 @@ class ScreenTextExtractor {
   Future<bool> isAllowedScreenSelectionAccess() async {
     if (kIsWeb) return true;
     if (Platform.isLinux) return true;
+    if (Platform.isWindows) return true;
     return await _channel.invokeMethod('isAllowedScreenSelectionAccess');
   }
 
@@ -49,6 +52,7 @@ class ScreenTextExtractor {
     bool onlyOpenPrefPane = false,
   }) async {
     if (Platform.isLinux) return;
+    if (Platform.isWindows) return;
     final Map<String, dynamic> arguments = {
       'onlyOpenPrefPane': onlyOpenPrefPane,
     };

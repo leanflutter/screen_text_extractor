@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
 
   void _init() async {
     // 初始化快捷键
+    hotKeyManager.unregisterAll();
     hotKeyManager.register(
       kShortcutExtractFromClipboard,
       keyDownHandler: (_) {
@@ -60,14 +61,17 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  void _handleExtractTextFromScreenSelection() async {
+  void _handleExtractTextFromClipboard() async {
+    print('_handleExtractTextFromClipboard');
     ExtractedData extractedData = await screenTextExtractor.extract(
-      mode: ExtractMode.screenSelection,
+      mode: ExtractMode.clipboard,
     );
+    print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }
 
   void _handleExtractTextFromScreenCapture() async {
+    print('_handleExtractTextFromScreenCapture');
     Directory directory = await getApplicationDocumentsDirectory();
     String fileName = 'Screenshot-${DateTime.now().millisecondsSinceEpoch}.png';
     ExtractedData extractedData = await screenTextExtractor.extract(
@@ -75,13 +79,16 @@ class _HomePageState extends State<HomePage> {
       imagePath:
           '${directory.path}/screen_text_extractor_example/Screenshots/$fileName',
     );
+    print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }
 
-  void _handleExtractTextFromClipboard() async {
+  void _handleExtractTextFromScreenSelection() async {
+    print('_handleExtractTextFromScreenSelection');
     ExtractedData extractedData = await screenTextExtractor.extract(
-      mode: ExtractMode.clipboard,
+      mode: ExtractMode.screenSelection,
     );
+    print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }
 
@@ -135,17 +142,14 @@ class _HomePageState extends State<HomePage> {
             PreferenceListItem(
               title: Text('extractTextFromClipboard'),
               detailText: Text(kShortcutExtractFromClipboard.toString()),
-              onTap: _handleExtractTextFromClipboard,
             ),
             PreferenceListItem(
               title: Text('extractTextFromScreenCapture'),
               detailText: Text(kShortcutExtractFromScreenCapture.toString()),
-              onTap: _handleExtractTextFromScreenCapture,
             ),
             PreferenceListItem(
               title: Text('extractTextFromScreenSelection'),
               detailText: Text(kShortcutExtractFromScreenSelection.toString()),
-              onTap: _handleExtractTextFromScreenSelection,
             ),
           ],
         ),
