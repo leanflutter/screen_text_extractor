@@ -29,7 +29,7 @@ This plugin allows Flutter **desktop** apps to extract text from screen.
 
 | MacOS | Linux | Windows |
 | :---: | :---: | :-----: |
-|  ✔️   |  ✔️   |   ➖    |
+|   ✔️   |   ✔️   |    ✔️    |
 
 ## Quick Start
 
@@ -72,14 +72,14 @@ data = await ScreenTextExtractor.instance.extractFromScreenSelection();
 
 | Method                         | Description  | Linux | MacOS | Windows |
 | ------------------------------ | ------------ | ----- | ----- | ------- |
-| isAllowedScreenCaptureAccess   | `macOS` only | ➖    | ✔️    | ➖      |
-| requestScreenCaptureAccess     | `macOS` only | ➖    | ✔️    | ➖      |
-| isAllowedScreenSelectionAccess | `macOS` only | ➖    | ✔️    | ➖      |
-| requestScreenSelectionAccess   | `macOS` only | ➖    | ✔️    | ➖      |
-| extract                        |              | ✔️    | ✔️    | ✔️      |
-| extractFromClipboard           |              | ✔️    | ✔️    | ✔️      |
-| extractFromScreenCapture       |              | ✔️    | ✔️    | ➖      |
-| extractFromScreenSelection     |              | ✔️    | ✔️    | ➖      |
+| isAllowedScreenCaptureAccess   | `macOS` only | ➖     | ✔️     | ➖       |
+| requestScreenCaptureAccess     | `macOS` only | ➖     | ✔️     | ➖       |
+| isAllowedScreenSelectionAccess | `macOS` only | ➖     | ✔️     | ➖       |
+| requestScreenSelectionAccess   | `macOS` only | ➖     | ✔️     | ➖       |
+| extract                        |              | ✔️     | ✔️     | ✔️       |
+| extractFromClipboard           |              | ✔️     | ✔️     | ✔️       |
+| extractFromScreenCapture       |              | ✔️     | ✔️     | ✔️       |
+| extractFromScreenSelection     |              | ✔️     | ✔️     | ✔️       |
 
 ## License
 
