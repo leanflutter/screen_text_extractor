@@ -29,6 +29,9 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         case "requestScreenSelectionAccess":
             requestScreenSelectionAccess(call, result: result)
             break
+        case "isTesseractInstalled":
+            isTesseractInstalled(call, result: result)
+            break
         case "extractFromScreenCapture":
             extractFromScreenCapture(call, result: result)
             break
@@ -42,11 +45,11 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     
     public func isAllowedScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if #available(macOS 10.15, *) {
+            
             result(CGPreflightScreenCaptureAccess())
-        } else {
-            // Fallback on earlier versions
-            result(false)
+            return
         };
+        result(true)
     }
     
     public func requestScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -83,7 +86,7 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         }
         result(true)
     }
-
+    
     public func isTesseractInstalled(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let fileMgr = FileManager.default
         if (fileMgr.fileExists(atPath: kBinTesseract)) {
@@ -92,7 +95,7 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
             result(false)
         }
     }
-
+    
     public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let imagePath: String = args["imagePath"] as! String
