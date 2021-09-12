@@ -76,7 +76,6 @@ data = await ScreenTextExtractor.instance.extractFromScreenSelection();
 | requestScreenCaptureAccess     | `macOS` only | ➖     | ✔️     | ➖       |
 | isAllowedScreenSelectionAccess | `macOS` only | ➖     | ✔️     | ➖       |
 | requestScreenSelectionAccess   | `macOS` only | ➖     | ✔️     | ➖       |
-| extract                        |              | ✔️     | ✔️     | ✔️       |
 | extractFromClipboard           |              | ✔️     | ✔️     | ✔️       |
 | extractFromScreenCapture       |              | ✔️     | ✔️     | ✔️       |
 | extractFromScreenSelection     |              | ✔️     | ✔️     | ✔️       |

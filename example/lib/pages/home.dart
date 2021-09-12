@@ -63,9 +63,7 @@ class _HomePageState extends State<HomePage> {
 
   void _handleExtractTextFromClipboard() async {
     print('_handleExtractTextFromClipboard');
-    ExtractedData extractedData = await screenTextExtractor.extract(
-      mode: ExtractMode.clipboard,
-    );
+    ExtractedData extractedData = await screenTextExtractor.extractFromClipboard();
     print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }
@@ -74,10 +72,8 @@ class _HomePageState extends State<HomePage> {
     print('_handleExtractTextFromScreenCapture');
     Directory directory = await getApplicationDocumentsDirectory();
     String fileName = 'Screenshot-${DateTime.now().millisecondsSinceEpoch}.png';
-    ExtractedData extractedData = await screenTextExtractor.extract(
-      mode: ExtractMode.screenCapture,
-      imagePath:
-          '${directory.path}/screen_text_extractor_example/Screenshots/$fileName',
+    ExtractedData extractedData = await screenTextExtractor.extractFromScreenCapture(
+      imagePath: '${directory.path}/screen_text_extractor_example/Screenshots/$fileName',
     );
     print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
@@ -85,9 +81,7 @@ class _HomePageState extends State<HomePage> {
 
   void _handleExtractTextFromScreenSelection() async {
     print('_handleExtractTextFromScreenSelection');
-    ExtractedData extractedData = await screenTextExtractor.extract(
-      mode: ExtractMode.screenSelection,
-    );
+    ExtractedData extractedData = await screenTextExtractor.extractFromScreenSelection();
     print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }

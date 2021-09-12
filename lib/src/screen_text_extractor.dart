@@ -59,20 +59,11 @@ class ScreenTextExtractor {
     await _channel.invokeMethod('requestScreenSelectionAccess', arguments);
   }
 
-  Future<ExtractedData> extract({
-    ExtractMode mode = ExtractMode.screenSelection,
-    String? imagePath,
-    bool? simulateCopyShortcut,
-  }) async {
-    ExtractedData? extractedData;
-    if (mode == ExtractMode.clipboard) {
-      extractedData = await extractFromClipboard();
-    } else if (mode == ExtractMode.screenCapture) {
-      extractedData = await extractFromScreenCapture(imagePath);
-    } else if (mode == ExtractMode.screenSelection) {
-      extractedData = await extractFromScreenSelection(simulateCopyShortcut);
-    }
-    return extractedData!;
+  Future<bool> isTesseractInstalled() async {
+    if (kIsWeb) return true;
+    if (Platform.isLinux) return true;
+    if (Platform.isWindows) return true;
+    return await _channel.invokeMethod('isTesseractInstalled');
   }
 
   Future<ExtractedData> extractFromClipboard() async {
@@ -83,9 +74,10 @@ class ScreenTextExtractor {
     );
   }
 
-  Future<ExtractedData> extractFromScreenCapture(
+  Future<ExtractedData> extractFromScreenCapture({
     String? imagePath,
-  ) async {
+    bool useTesseract = false,
+  }) async {
     Map<String, dynamic> arguments = {};
     if (!kIsWeb) {
       if (imagePath == null) throw ArgumentError.notNull('imagePath');
@@ -96,6 +88,7 @@ class ScreenTextExtractor {
       }
       arguments = {
         'imagePath': imagePath,
+        'useTesseract': useTesseract,
       };
     }
     final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
@@ -103,8 +96,12 @@ class ScreenTextExtractor {
       arguments,
     );
 
-    ExtractedData extractedData =
-        ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+    ExtractedData extractedData = ExtractedData.fromJson(
+      Map<String, dynamic>.from(resultData),
+    );
+    if (extractedData.text != null) {
+      extractedData.text = extractedData.text!.trim();
+    }
     if (extractedData.base64Image == null) {
       File imageFile = File(imagePath!);
       if (imageFile.existsSync()) {
@@ -118,9 +115,9 @@ class ScreenTextExtractor {
     return extractedData;
   }
 
-  Future<ExtractedData> extractFromScreenSelection(
+  Future<ExtractedData> extractFromScreenSelection({
     bool? simulateCopyShortcut,
-  ) async {
+  }) async {
     final Map<String, dynamic> arguments = {
       'simulateCopyShortcut': simulateCopyShortcut ?? false,
     };
@@ -128,6 +125,12 @@ class ScreenTextExtractor {
       'extractFromScreenSelection',
       arguments,
     );
-    return ExtractedData.fromJson(Map<String, dynamic>.from(resultData));
+    ExtractedData extractedData = ExtractedData.fromJson(
+      Map<String, dynamic>.from(resultData),
+    );
+    if (extractedData.text != null) {
+      extractedData.text = extractedData.text!.trim();
+    }
+    return extractedData;
   }
 }

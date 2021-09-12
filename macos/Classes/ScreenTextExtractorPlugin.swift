@@ -2,6 +2,10 @@ import Carbon
 import Cocoa
 import FlutterMacOS
 
+
+let kBinScreencapture = "/usr/sbin/screencapture";
+let kBinTesseract = "/usr/local/bin/tesseract";
+
 public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     let tmpDir: String = NSTemporaryDirectory()
     
@@ -79,20 +83,52 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         }
         result(true)
     }
-    
+
+    public func isTesseractInstalled(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let fileMgr = FileManager.default
+        if (fileMgr.fileExists(atPath: kBinTesseract)) {
+            result(true)
+        } else {
+            result(false)
+        }
+    }
+
     public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let imagePath: String = args["imagePath"] as! String
+        let useTesseract: Bool = args["useTesseract"] as! Bool
         
-        let task = Process()
-        task.launchPath = "/usr/sbin/screencapture"
-        task.arguments = ["-i", "-r", imagePath]
-        task.launch()
-        task.waitUntilExit()
-        
-        let resultData: NSDictionary = [
+        var resultData: NSDictionary = [
             "imagePath": imagePath,
         ]
+        
+        let screencapture = Process()
+        screencapture.launchPath = kBinScreencapture
+        screencapture.arguments = ["-i", "-r", imagePath]
+        screencapture.launch()
+        screencapture.waitUntilExit()
+        
+        if (useTesseract) {
+            let ocrOutputPath = imagePath.replacingOccurrences(of: ".png", with: ".txt")
+            let tesseract = Process()
+            tesseract.launchPath = kBinTesseract
+            tesseract.arguments = [imagePath, ocrOutputPath.replacingOccurrences(of: ".txt", with: "")]
+            tesseract.launch()
+            tesseract.waitUntilExit()
+            
+            let fileMgr = FileManager.default
+            if (fileMgr.fileExists(atPath: ocrOutputPath)) {
+                do {
+                    let text: String = try String(contentsOfFile: ocrOutputPath, encoding: .utf8)
+                    resultData = [
+                        "text": text,
+                        "imagePath": imagePath,
+                    ]
+                } catch _ as NSError {
+                    // skip
+                }
+            }
+        }
         result(resultData)
     }
     
