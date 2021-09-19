@@ -7,8 +7,6 @@ let kBinScreencapture = "/usr/sbin/screencapture";
 let kBinTesseract = "/usr/local/bin/tesseract";
 
 public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
-    let tmpDir: String = NSTemporaryDirectory()
-    
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "screen_text_extractor", binaryMessenger: registrar.messenger)
         let instance = ScreenTextExtractorPlugin()
@@ -104,13 +102,13 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         var resultData: NSDictionary = [
             "imagePath": imagePath,
         ]
-        
+
         let screencapture = Process()
         screencapture.launchPath = kBinScreencapture
         screencapture.arguments = ["-i", "-r", imagePath]
         screencapture.launch()
         screencapture.waitUntilExit()
-        
+
         if (useTesseract) {
             let ocrOutputPath = imagePath.replacingOccurrences(of: ".png", with: ".txt")
             let tesseract = Process()
@@ -118,7 +116,7 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
             tesseract.arguments = [imagePath, ocrOutputPath.replacingOccurrences(of: ".txt", with: "")]
             tesseract.launch()
             tesseract.waitUntilExit()
-            
+
             let fileMgr = FileManager.default
             if (fileMgr.fileExists(atPath: ocrOutputPath)) {
                 do {
@@ -137,37 +135,43 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     
     public func extractFromScreenSelection(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
-        let simulateCopyShortcut: Bool = args["simulateCopyShortcut"] as! Bool
+        let useAccessibilityAPIFirst: Bool = args["useAccessibilityAPIFirst"] as! Bool
         
         var text: String = ""
         
-        let systemWideElement = AXUIElementCreateSystemWide()
-        var focusedElement : AnyObject?
-        
-        let error = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
-        if (error == .success){
-            var selectedTextValue: AnyObject?
-            let selectedTextError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
-            if (selectedTextError == .success) {
-                text = selectedTextValue as! String
-            }
+        if (useAccessibilityAPIFirst) {
+            // 通过辅助功能API提取选中的文字
+            let systemWideElement = AXUIElementCreateSystemWide()
+            var focusedElement : AnyObject?
             
-            if (text.isEmpty) {
-                // Extract text in the WebKit application
-                var selectedTextMarkerRangeValue: AnyObject?
-                let selectedTextMarkerRangeError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, "AXSelectedTextMarkerRange" as CFString, &selectedTextMarkerRangeValue);
-                if (selectedTextMarkerRangeError == .success) {
-                    var stringForTextMarkerRangeValue: AnyObject?
-                    let stringForTextMarkerRangeError = AXUIElementCopyParameterizedAttributeValue(focusedElement as! AXUIElement, "AXAttributedStringForTextMarkerRange" as CFString, selectedTextMarkerRangeValue!, &stringForTextMarkerRangeValue);
-                    if (stringForTextMarkerRangeError == .success) {
-                        text = (stringForTextMarkerRangeValue as! NSAttributedString).string
+            let error = AXUIElementCopyAttributeValue(systemWideElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
+            if (error == .success){
+                var selectedTextValue: AnyObject?
+                let selectedTextError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, kAXSelectedTextAttribute as CFString, &selectedTextValue)
+                if (selectedTextError == .success) {
+                    text = selectedTextValue as! String
+                }
+                
+                if (text.isEmpty) {
+                    // Extract text in the WebKit application
+                    var selectedTextMarkerRangeValue: AnyObject?
+                    let selectedTextMarkerRangeError = AXUIElementCopyAttributeValue(focusedElement as! AXUIElement, "AXSelectedTextMarkerRange" as CFString, &selectedTextMarkerRangeValue);
+                    if (selectedTextMarkerRangeError == .success) {
+                        var stringForTextMarkerRangeValue: AnyObject?
+                        let stringForTextMarkerRangeError = AXUIElementCopyParameterizedAttributeValue(focusedElement as! AXUIElement, "AXAttributedStringForTextMarkerRange" as CFString, selectedTextMarkerRangeValue!, &stringForTextMarkerRangeValue);
+                        if (stringForTextMarkerRangeError == .success) {
+                            text = (stringForTextMarkerRangeValue as! NSAttributedString).string
+                        }
                     }
                 }
             }
         }
         
-        // 通过模拟按下 Command+C 键以提取选中的文字
-        if (text.isEmpty && simulateCopyShortcut) {
+        if (useAccessibilityAPIFirst && !text.isEmpty) {
+            let resultData: NSDictionary = ["text": text]
+            result(resultData)
+        } else {
+            // 通过模拟按下 Command+C 键以提取选中的文字
             let copiedString = NSPasteboard.general.string(forType: .string)
             
             let eventKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(UInt32(kVK_ANSI_C)), keyDown: true);
@@ -186,9 +190,6 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
                 let resultData: NSDictionary = ["text": text]
                 result(resultData)
             }
-        } else {
-            let resultData: NSDictionary = ["text": text]
-            result(resultData)
         }
     }
 }

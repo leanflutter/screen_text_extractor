@@ -116,10 +116,10 @@ class ScreenTextExtractor {
   }
 
   Future<ExtractedData> extractFromScreenSelection({
-    bool? simulateCopyShortcut,
+    bool useAccessibilityAPIFirst = false,
   }) async {
     final Map<String, dynamic> arguments = {
-      'simulateCopyShortcut': simulateCopyShortcut ?? false,
+      'useAccessibilityAPIFirst': useAccessibilityAPIFirst,
     };
     final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
       'extractFromScreenSelection',
