@@ -59,24 +59,17 @@ class ScreenTextExtractor {
     await _channel.invokeMethod('requestScreenSelectionAccess', arguments);
   }
 
-  Future<bool> isTesseractInstalled() async {
-    if (kIsWeb) return true;
-    if (Platform.isLinux) return true;
-    if (Platform.isWindows) return true;
-    return await _channel.invokeMethod('isTesseractInstalled');
+  Future<bool> simulateCtrlCKeyPress() async {
+    return await _channel.invokeMethod('simulateCtrlCKeyPress', {});
   }
 
   Future<ExtractedData> extractFromClipboard() async {
-    ClipboardData? clipboardData =
-        await Clipboard.getData(Clipboard.kTextPlain);
-    return ExtractedData(
-      text: clipboardData?.text,
-    );
+    ClipboardData? d = await Clipboard.getData(Clipboard.kTextPlain);
+    return ExtractedData(text: d?.text ?? '');
   }
 
   Future<ExtractedData> extractFromScreenCapture({
     String? imagePath,
-    bool useTesseract = false,
   }) async {
     Map<String, dynamic> arguments = {};
     if (!kIsWeb) {
@@ -88,7 +81,6 @@ class ScreenTextExtractor {
       }
       arguments = {
         'imagePath': imagePath,
-        'useTesseract': useTesseract,
       };
     }
     final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
@@ -118,19 +110,25 @@ class ScreenTextExtractor {
   Future<ExtractedData> extractFromScreenSelection({
     bool useAccessibilityAPIFirst = false,
   }) async {
-    final Map<String, dynamic> arguments = {
-      'useAccessibilityAPIFirst': useAccessibilityAPIFirst,
-    };
-    final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
-      'extractFromScreenSelection',
-      arguments,
-    );
-    ExtractedData extractedData = ExtractedData.fromJson(
-      Map<String, dynamic>.from(resultData),
-    );
-    if (extractedData.text != null) {
-      extractedData.text = extractedData.text!.trim();
+    ExtractedData extractedData = ExtractedData(text: '');
+    if (Platform.isWindows) {
+      // 通过模拟按下 Ctrl+C 快捷键以达到取词的目的。
+      await simulateCtrlCKeyPress();
+      await Future.delayed(Duration(milliseconds: 300));
+      return extractFromClipboard();
+    } else {
+      final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
+        'extractFromScreenSelection',
+        {
+          'useAccessibilityAPIFirst': useAccessibilityAPIFirst,
+        },
+      );
+      extractedData = ExtractedData.fromJson(
+        Map<String, dynamic>.from(resultData),
+      );
     }
+    if (extractedData.text != null)
+      extractedData.text = extractedData.text!.trim();
     return extractedData;
   }
 }

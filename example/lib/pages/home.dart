@@ -26,7 +26,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _isAllowedScreenCaptureAccess = false;
   bool _isAllowedScreenSelectionAccess = false;
-  bool _isTesseractInstalled = false;
 
   @override
   void initState() {
@@ -59,7 +58,6 @@ class _HomePageState extends State<HomePage> {
         await screenTextExtractor.isAllowedScreenCaptureAccess();
     _isAllowedScreenSelectionAccess =
         await screenTextExtractor.isAllowedScreenSelectionAccess();
-    _isTesseractInstalled = await screenTextExtractor.isTesseractInstalled();
     setState(() {});
   }
 
@@ -141,17 +139,6 @@ class _HomePageState extends State<HomePage> {
         PreferenceListSection(
           title: Text('METHODS'),
           children: [
-            PreferenceListItem(
-              title: Text('isTesseractInstalled'),
-              accessoryView: Text('$_isTesseractInstalled'),
-              onTap: () async {
-                _isTesseractInstalled =
-                    await ScreenTextExtractor.instance.isTesseractInstalled();
-                BotToast.showText(
-                    text: 'isTesseractInstalled: $_isTesseractInstalled');
-                setState(() {});
-              },
-            ),
             PreferenceListItem(
               title: Text('extractTextFromClipboard'),
               detailText: Text(kShortcutExtractFromClipboard.toString()),

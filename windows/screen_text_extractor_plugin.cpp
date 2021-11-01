@@ -15,8 +15,8 @@
 #include <sstream>
 #include <thread>
 
+const char kSimulateCtrlCKeyPress[] = "simulateCtrlCKeyPress";
 const char kExtractFromScreenCapture[] = "extractFromScreenCapture";
-const char kExtractFromScreenSelection[] = "extractFromScreenSelection";
 
 namespace
 {
@@ -34,11 +34,10 @@ class ScreenTextExtractorPlugin : public flutter::Plugin
 
   private:
     flutter::PluginRegistrarWindows *registrar;
-
-    void ScreenTextExtractorPlugin::ExtractFromScreenCapture(
+    void ScreenTextExtractorPlugin::SimulateCtrlCKeyPress(
         const flutter::MethodCall<flutter::EncodableValue> &method_call,
         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-    void ScreenTextExtractorPlugin::ExtractFromScreenSelection(
+    void ScreenTextExtractorPlugin::ExtractFromScreenCapture(
         const flutter::MethodCall<flutter::EncodableValue> &method_call,
         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
     // Called when a method is called on this plugin's channel from Dart.
@@ -122,91 +121,7 @@ void *ExtractFromScreenCaptureThread(std::string imagePath)
     return 0;
 }
 
-std::string Utf8FromUtf16(const std::wstring_view utf16_string)
-{
-    if (utf16_string.empty())
-    {
-        return std::string();
-    }
-    int target_length = ::WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16_string.data(),
-                                              static_cast<int>(utf16_string.length()), nullptr, 0, nullptr, nullptr);
-    if (target_length == 0)
-    {
-        return std::string();
-    }
-    std::string utf8_string;
-    utf8_string.resize(target_length);
-    int converted_length = ::WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, utf16_string.data(),
-                                                 static_cast<int>(utf16_string.length()), utf8_string.data(),
-                                                 target_length, nullptr, nullptr);
-    if (converted_length == 0)
-    {
-        return std::string();
-    }
-    return utf8_string;
-}
-
-std::optional<std::wstring> GetClipboardString()
-{
-    HANDLE clipboardData = ::GetClipboardData(CF_UNICODETEXT);
-    if (clipboardData == nullptr)
-    {
-        return std::nullopt;
-    }
-    void *locked_memory = ::GlobalLock(clipboardData);
-    return std::optional<std::wstring>(static_cast<wchar_t *>(locked_memory));
-}
-
-void *ExtractFromScreenSelectionThread()
-{
-    if (last_method_call_name != kExtractFromScreenSelection)
-        return 0;
-
-    Sleep(300);
-
-    std::optional<std::wstring> clipboard_string = std::nullopt;
-
-    OpenClipboard(nullptr);
-    HANDLE clipboardData = GetClipboardData(CF_UNICODETEXT);
-    if (clipboardData != nullptr)
-    {
-        void *locked_memory = ::GlobalLock(clipboardData);
-        clipboard_string = std::optional<std::wstring>(static_cast<wchar_t *>(locked_memory));
-    }
-    GlobalUnlock(clipboardData);
-    CloseClipboard();
-
-    flutter::EncodableMap resultMap = flutter::EncodableMap();
-    resultMap[flutter::EncodableValue("text")] = flutter::EncodableValue(Utf8FromUtf16(*clipboard_string).c_str());
-
-    last_method_call_result->Success(flutter::EncodableValue(resultMap));
-    return 0;
-}
-
-void ScreenTextExtractorPlugin::ExtractFromScreenCapture(
-    const flutter::MethodCall<flutter::EncodableValue> &method_call,
-    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
-{
-    const flutter::EncodableMap &args = std::get<flutter::EncodableMap>(*method_call.arguments());
-
-    std::string imagePath = std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
-
-    OpenClipboard(nullptr);
-    EmptyClipboard();
-    CloseClipboard();
-
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    ShellExecute(NULL, converter.from_bytes("open").c_str(), converter.from_bytes("ms-screenclip:").c_str(), NULL, NULL,
-                 SW_SHOWNORMAL);
-
-    last_method_call_name = kExtractFromScreenCapture;
-    last_method_call_result = std::move(result);
-
-    std::thread th(ExtractFromScreenCaptureThread, imagePath);
-    th.detach();
-}
-
-void ScreenTextExtractorPlugin::ExtractFromScreenSelection(
+void ScreenTextExtractorPlugin::SimulateCtrlCKeyPress(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
 {
@@ -243,23 +158,42 @@ void ScreenTextExtractorPlugin::ExtractFromScreenSelection(
     // Send key sequence to system
     SendInput(static_cast<UINT>(std::size(copyText)), copyText, sizeof(INPUT));
 
-    last_method_call_name = kExtractFromScreenSelection;
+    result->Success(flutter::EncodableValue(true));
+}
+
+void ScreenTextExtractorPlugin::ExtractFromScreenCapture(
+    const flutter::MethodCall<flutter::EncodableValue> &method_call,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
+{
+    const flutter::EncodableMap &args = std::get<flutter::EncodableMap>(*method_call.arguments());
+
+    std::string imagePath = std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
+
+    OpenClipboard(nullptr);
+    EmptyClipboard();
+    CloseClipboard();
+
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    ShellExecute(NULL, converter.from_bytes("open").c_str(), converter.from_bytes("ms-screenclip:").c_str(), NULL, NULL,
+                 SW_SHOWNORMAL);
+
+    last_method_call_name = kExtractFromScreenCapture;
     last_method_call_result = std::move(result);
 
-    std::thread th(ExtractFromScreenSelectionThread);
+    std::thread th(ExtractFromScreenCaptureThread, imagePath);
     th.detach();
 }
 
 void ScreenTextExtractorPlugin::HandleMethodCall(const flutter::MethodCall<flutter::EncodableValue> &method_call,
                                                  std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
 {
-    if (method_call.method_name().compare(kExtractFromScreenCapture) == 0)
+    if (method_call.method_name().compare(kSimulateCtrlCKeyPress) == 0)
+    {
+        SimulateCtrlCKeyPress(method_call, std::move(result));
+    }
+    else if (method_call.method_name().compare(kExtractFromScreenCapture) == 0)
     {
         ExtractFromScreenCapture(method_call, std::move(result));
-    }
-    else if (method_call.method_name().compare(kExtractFromScreenSelection) == 0)
-    {
-        ExtractFromScreenSelection(method_call, std::move(result));
     }
     else
     {
