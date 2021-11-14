@@ -4,7 +4,6 @@ import FlutterMacOS
 
 
 let kBinScreencapture = "/usr/sbin/screencapture";
-let kBinTesseract = "/usr/local/bin/tesseract";
 
 public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -26,9 +25,6 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
             break
         case "requestScreenSelectionAccess":
             requestScreenSelectionAccess(call, result: result)
-            break
-        case "isTesseractInstalled":
-            isTesseractInstalled(call, result: result)
             break
         case "extractFromScreenCapture":
             extractFromScreenCapture(call, result: result)
@@ -85,19 +81,9 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         result(true)
     }
     
-    public func isTesseractInstalled(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let fileMgr = FileManager.default
-        if (fileMgr.fileExists(atPath: kBinTesseract)) {
-            result(true)
-        } else {
-            result(false)
-        }
-    }
-    
     public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let imagePath: String = args["imagePath"] as! String
-        let useTesseract: Bool = args["useTesseract"] as! Bool
         
         var resultData: NSDictionary = [
             "imagePath": imagePath,
@@ -109,27 +95,6 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         screencapture.launch()
         screencapture.waitUntilExit()
 
-        if (useTesseract) {
-            let ocrOutputPath = imagePath.replacingOccurrences(of: ".png", with: ".txt")
-            let tesseract = Process()
-            tesseract.launchPath = kBinTesseract
-            tesseract.arguments = [imagePath, ocrOutputPath.replacingOccurrences(of: ".txt", with: "")]
-            tesseract.launch()
-            tesseract.waitUntilExit()
-
-            let fileMgr = FileManager.default
-            if (fileMgr.fileExists(atPath: ocrOutputPath)) {
-                do {
-                    let text: String = try String(contentsOfFile: ocrOutputPath, encoding: .utf8)
-                    resultData = [
-                        "text": text,
-                        "imagePath": imagePath,
-                    ]
-                } catch _ as NSError {
-                    // skip
-                }
-            }
-        }
         result(resultData)
     }
     
