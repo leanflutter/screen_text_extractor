@@ -6,17 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:preference_list/preference_list.dart';
 import 'package:screen_text_extractor/screen_text_extractor.dart';
-import 'package:path_provider/path_provider.dart';
 
 final hotKeyManager = HotKeyManager.instance;
 final screenTextExtractor = ScreenTextExtractor.instance;
 
 final kShortcutExtractFromClipboard =
     HotKey(KeyCode.keyZ, modifiers: [KeyModifier.alt]);
-final kShortcutExtractFromScreenCapture =
-    HotKey(KeyCode.keyX, modifiers: [KeyModifier.alt]);
 final kShortcutExtractFromScreenSelection =
-    HotKey(KeyCode.keyC, modifiers: [KeyModifier.alt]);
+    HotKey(KeyCode.keyX, modifiers: [KeyModifier.alt]);
 
 class HomePage extends StatefulWidget {
   @override
@@ -24,8 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _isAllowedScreenCaptureAccess = false;
-  bool _isAllowedScreenSelectionAccess = false;
+  bool _isAccessAllowed = false;
 
   @override
   void initState() {
@@ -48,16 +44,8 @@ class _HomePageState extends State<HomePage> {
         _handleExtractTextFromScreenSelection();
       },
     );
-    hotKeyManager.register(
-      kShortcutExtractFromScreenCapture,
-      keyDownHandler: (_) {
-        _handleExtractTextFromScreenCapture();
-      },
-    );
-    _isAllowedScreenCaptureAccess =
-        await screenTextExtractor.isAllowedScreenCaptureAccess();
-    _isAllowedScreenSelectionAccess =
-        await screenTextExtractor.isAllowedScreenSelectionAccess();
+
+    _isAccessAllowed = await screenTextExtractor.isAccessAllowed();
     setState(() {});
   }
 
@@ -65,19 +53,6 @@ class _HomePageState extends State<HomePage> {
     print('_handleExtractTextFromClipboard');
     ExtractedData extractedData =
         await screenTextExtractor.extractFromClipboard();
-    print(extractedData.toJson());
-    BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
-  }
-
-  void _handleExtractTextFromScreenCapture() async {
-    print('_handleExtractTextFromScreenCapture');
-    Directory directory = await getApplicationDocumentsDirectory();
-    String fileName = 'Screenshot-${DateTime.now().millisecondsSinceEpoch}.png';
-    ExtractedData extractedData =
-        await screenTextExtractor.extractFromScreenCapture(
-      imagePath:
-          '${directory.path}/screen_text_extractor_example/Screenshots/$fileName',
-    );
     print(extractedData.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData.toJson()}');
   }
@@ -97,41 +72,21 @@ class _HomePageState extends State<HomePage> {
           PreferenceListSection(
             children: [
               PreferenceListItem(
-                title: Text('isAllowedScreenCaptureAccess'),
-                accessoryView: Text('$_isAllowedScreenCaptureAccess'),
+                title: Text('isAccessAllowed'),
+                accessoryView: Text('$_isAccessAllowed'),
                 onTap: () async {
-                  bool allowed = await ScreenTextExtractor.instance
-                      .isAllowedScreenCaptureAccess();
+                  bool allowed =
+                      await ScreenTextExtractor.instance.isAccessAllowed();
                   BotToast.showText(text: 'allowed: $allowed');
                   setState(() {
-                    _isAllowedScreenCaptureAccess = allowed;
+                    _isAccessAllowed = allowed;
                   });
                 },
               ),
               PreferenceListItem(
-                title: Text('requestScreenCaptureAccess'),
+                title: Text('requestAccess'),
                 onTap: () async {
-                  await ScreenTextExtractor.instance
-                      .requestScreenCaptureAccess();
-                },
-              ),
-              PreferenceListItem(
-                title: Text('isAllowedScreenSelectionAccess'),
-                accessoryView: Text('$_isAllowedScreenSelectionAccess'),
-                onTap: () async {
-                  bool allowed = await ScreenTextExtractor.instance
-                      .isAllowedScreenSelectionAccess();
-                  BotToast.showText(text: 'allowed: $allowed');
-                  setState(() {
-                    _isAllowedScreenSelectionAccess = allowed;
-                  });
-                },
-              ),
-              PreferenceListItem(
-                title: Text('requestScreenSelectionAccess'),
-                onTap: () async {
-                  await ScreenTextExtractor.instance
-                      .requestScreenSelectionAccess();
+                  await ScreenTextExtractor.instance.requestAccess();
                 },
               ),
             ],
@@ -142,10 +97,6 @@ class _HomePageState extends State<HomePage> {
             PreferenceListItem(
               title: Text('extractTextFromClipboard'),
               detailText: Text(kShortcutExtractFromClipboard.toString()),
-            ),
-            PreferenceListItem(
-              title: Text('extractTextFromScreenCapture'),
-              detailText: Text(kShortcutExtractFromScreenCapture.toString()),
             ),
             PreferenceListItem(
               title: Text('extractTextFromScreenSelection'),

@@ -2,9 +2,6 @@ import Carbon
 import Cocoa
 import FlutterMacOS
 
-
-let kBinScreencapture = "/usr/sbin/screencapture";
-
 public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "screen_text_extractor", binaryMessenger: registrar.messenger)
@@ -14,20 +11,14 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
-        case "isAllowedScreenCaptureAccess":
-            isAllowedScreenCaptureAccess(call, result: result)
+        case "isAccessAllowed":
+            isAccessAllowed(call, result: result)
             break
-        case "requestScreenCaptureAccess":
-            requestScreenCaptureAccess(call, result: result)
+        case "requestAccess":
+            requestAccess(call, result: result)
             break
-        case "isAllowedScreenSelectionAccess":
-            isAllowedScreenSelectionAccess(call, result: result)
-            break
-        case "requestScreenSelectionAccess":
-            requestScreenSelectionAccess(call, result: result)
-            break
-        case "extractFromScreenCapture":
-            extractFromScreenCapture(call, result: result)
+        case "simulateCtrlCKeyPress":
+            simulateCtrlCKeyPress(call, result: result)
             break
         case "extractFromScreenSelection":
             extractFromScreenSelection(call, result: result)
@@ -37,37 +28,11 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    public func isAllowedScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if #available(macOS 10.15, *) {
-            
-            result(CGPreflightScreenCaptureAccess())
-            return
-        };
-        result(true)
-    }
-    
-    public func requestScreenCaptureAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args:[String: Any] = call.arguments as! [String: Any]
-        let onlyOpenPrefPane: Bool = args["onlyOpenPrefPane"] as! Bool
-        
-        if (!onlyOpenPrefPane) {
-            if #available(macOS 10.15, *) {
-                CGRequestScreenCaptureAccess()
-            } else {
-                // Fallback on earlier versions
-            }
-        } else {
-            let prefpaneUrl = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
-            NSWorkspace.shared.open(prefpaneUrl)
-        }
-        result(true)
-    }
-    
-    public func isAllowedScreenSelectionAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func isAccessAllowed(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         result(AXIsProcessTrusted())
     }
     
-    public func requestScreenSelectionAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func requestAccess(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let onlyOpenPrefPane: Bool = args["onlyOpenPrefPane"] as! Bool
         
@@ -80,24 +45,13 @@ public class ScreenTextExtractorPlugin: NSObject, FlutterPlugin {
         }
         result(true)
     }
-    
-    public func extractFromScreenCapture(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args:[String: Any] = call.arguments as! [String: Any]
-        let imagePath: String = args["imagePath"] as! String
-        
-        var resultData: NSDictionary = [
-            "imagePath": imagePath,
-        ]
 
-        let screencapture = Process()
-        screencapture.launchPath = kBinScreencapture
-        screencapture.arguments = ["-i", "-r", imagePath]
-        screencapture.launch()
-        screencapture.waitUntilExit()
-
-        result(resultData)
+    public func simulateCtrlCKeyPress(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let eventKeyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(UInt32(kVK_ANSI_C)), keyDown: true);
+        eventKeyDown!.flags = CGEventFlags.maskCommand;
+        eventKeyDown!.post(tap: CGEventTapLocation.cghidEventTap);
     }
-    
+
     public func extractFromScreenSelection(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args:[String: Any] = call.arguments as! [String: Any]
         let useAccessibilityAPIFirst: Bool = args["useAccessibilityAPIFirst"] as! Bool
