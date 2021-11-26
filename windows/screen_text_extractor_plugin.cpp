@@ -7,22 +7,10 @@
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 
-#include <atlimage.h>
-#include <codecvt>
-#include <fstream>
 #include <map>
-#include <memory>
-#include <sstream>
-#include <thread>
-
-const char kSimulateCtrlCKeyPress[] = "simulateCtrlCKeyPress";
-const char kExtractFromScreenCapture[] = "extractFromScreenCapture";
 
 namespace
 {
-std::string last_method_call_name;
-std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> last_method_call_result;
-
 class ScreenTextExtractorPlugin : public flutter::Plugin
 {
   public:
@@ -35,9 +23,6 @@ class ScreenTextExtractorPlugin : public flutter::Plugin
   private:
     flutter::PluginRegistrarWindows *registrar;
     void ScreenTextExtractorPlugin::SimulateCtrlCKeyPress(
-        const flutter::MethodCall<flutter::EncodableValue> &method_call,
-        std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
-    void ScreenTextExtractorPlugin::ExtractFromScreenCapture(
         const flutter::MethodCall<flutter::EncodableValue> &method_call,
         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
     // Called when a method is called on this plugin's channel from Dart.
@@ -66,59 +51,6 @@ ScreenTextExtractorPlugin::ScreenTextExtractorPlugin()
 
 ScreenTextExtractorPlugin::~ScreenTextExtractorPlugin()
 {
-}
-
-void *ExtractFromScreenCaptureThread(std::string imagePath)
-{
-    if (last_method_call_name != kExtractFromScreenCapture)
-        return 0;
-
-    int loop_count = 0;
-    while (loop_count < 300)
-    {
-        Sleep(10);
-        loop_count++;
-
-        HBITMAP bitmap = NULL;
-
-        OpenClipboard(nullptr);
-        bitmap = (HBITMAP)GetClipboardData(CF_BITMAP);
-        CloseClipboard();
-
-        if (bitmap == NULL)
-        {
-            continue;
-        }
-
-        std::vector<BYTE> buf;
-        IStream *stream = NULL;
-        CreateStreamOnHGlobal(0, TRUE, &stream);
-        CImage image;
-        ULARGE_INTEGER liSize;
-
-        // screenshot to png and save to stream
-        image.Attach(bitmap);
-        image.Save(stream, Gdiplus::ImageFormatPNG);
-        IStream_Size(stream, &liSize);
-        DWORD len = liSize.LowPart;
-        IStream_Reset(stream);
-        buf.resize(len);
-        IStream_Read(stream, &buf[0], len);
-        stream->Release();
-
-        // put the imapge in the file
-        std::fstream fi;
-        fi.open(imagePath, std::fstream::binary | std::fstream::out);
-        fi.write(reinterpret_cast<const char *>(&buf[0]), buf.size() * sizeof(BYTE));
-        fi.close();
-    }
-
-    flutter::EncodableMap resultMap = flutter::EncodableMap();
-    resultMap[flutter::EncodableValue("imagePath")] = flutter::EncodableValue(imagePath.c_str());
-
-    last_method_call_result->Success(flutter::EncodableValue(resultMap));
-
-    return 0;
 }
 
 void ScreenTextExtractorPlugin::SimulateCtrlCKeyPress(
@@ -161,39 +93,12 @@ void ScreenTextExtractorPlugin::SimulateCtrlCKeyPress(
     result->Success(flutter::EncodableValue(true));
 }
 
-void ScreenTextExtractorPlugin::ExtractFromScreenCapture(
-    const flutter::MethodCall<flutter::EncodableValue> &method_call,
-    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
-{
-    const flutter::EncodableMap &args = std::get<flutter::EncodableMap>(*method_call.arguments());
-
-    std::string imagePath = std::get<std::string>(args.at(flutter::EncodableValue("imagePath")));
-
-    OpenClipboard(nullptr);
-    EmptyClipboard();
-    CloseClipboard();
-
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    ShellExecute(NULL, converter.from_bytes("open").c_str(), converter.from_bytes("ms-screenclip:").c_str(), NULL, NULL,
-                 SW_SHOWNORMAL);
-
-    last_method_call_name = kExtractFromScreenCapture;
-    last_method_call_result = std::move(result);
-
-    std::thread th(ExtractFromScreenCaptureThread, imagePath);
-    th.detach();
-}
-
 void ScreenTextExtractorPlugin::HandleMethodCall(const flutter::MethodCall<flutter::EncodableValue> &method_call,
                                                  std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
 {
-    if (method_call.method_name().compare(kSimulateCtrlCKeyPress) == 0)
+    if (method_call.method_name().compare("simulateCtrlCKeyPress") == 0)
     {
         SimulateCtrlCKeyPress(method_call, std::move(result));
-    }
-    else if (method_call.method_name().compare(kExtractFromScreenCapture) == 0)
-    {
-        ExtractFromScreenCapture(method_call, std::move(result));
     }
     else
     {

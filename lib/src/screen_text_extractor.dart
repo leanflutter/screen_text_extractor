@@ -54,7 +54,7 @@ class ScreenTextExtractor {
     if (Platform.isWindows) {
       // 通过模拟按下 Ctrl+C 快捷键以达到取词的目的。
       await simulateCtrlCKeyPress();
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(Duration(milliseconds: 500));
       return extractFromClipboard();
     } else {
       final Map<dynamic, dynamic> resultData = await _channel.invokeMethod(
