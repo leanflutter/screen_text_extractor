@@ -17,20 +17,6 @@ struct _ScreenTextExtractorPlugin
 
 G_DEFINE_TYPE(ScreenTextExtractorPlugin, screen_text_extractor_plugin, g_object_get_type())
 
-static FlMethodResponse *extract_from_screen_capture(ScreenTextExtractorPlugin *self,
-                                                     FlValue *args)
-{
-  const gchar *imagePath = fl_value_get_string(fl_value_lookup_string(args, "imagePath"));
-
-  g_autofree gchar *command = g_strdup_printf("gnome-screenshot -a -f  %s", imagePath);
-  system(command);
-
-  g_autoptr(FlValue) result_data = fl_value_new_map();
-  fl_value_set_string_take(result_data, "imagePath", fl_value_new_string(imagePath));
-
-  return FL_METHOD_RESPONSE(fl_method_success_response_new(result_data));
-}
-
 static FlMethodResponse *extract_from_screen_selection(ScreenTextExtractorPlugin *self,
                                                        FlValue *args)
 {
@@ -53,19 +39,7 @@ static void screen_text_extractor_plugin_handle_method_call(
   const gchar *method = fl_method_call_get_name(method_call);
   FlValue *args = fl_method_call_get_args(method_call);
 
-  if (strcmp(method, "getPlatformVersion") == 0)
-  {
-    struct utsname uname_data = {};
-    uname(&uname_data);
-    g_autofree gchar *version = g_strdup_printf("Linux %s", uname_data.version);
-    g_autoptr(FlValue) result = fl_value_new_string(version);
-    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-  }
-  else if (strcmp(method, "extractFromScreenCapture") == 0)
-  {
-    response = extract_from_screen_capture(self, args);
-  }
-  else if (strcmp(method, "extractFromScreenSelection") == 0)
+  if (strcmp(method, "extractFromScreenSelection") == 0)
   {
     response = extract_from_screen_selection(self, args);
   }
