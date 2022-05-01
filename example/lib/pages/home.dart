@@ -48,6 +48,7 @@ class _HomePageState extends State<HomePage> {
     ExtractedData? extractedData = await screenTextExtractor.extract(
       mode: ExtractMode.clipboard,
     );
+    print(extractedData?.toJson());
     BotToast.showText(text: 'extractedData: ${extractedData?.toJson()}');
   }
 
