@@ -11,6 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  clipboard_watcher: ^0.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
