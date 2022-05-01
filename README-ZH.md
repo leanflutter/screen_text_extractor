@@ -45,7 +45,7 @@
 
 ```yaml
 dependencies:
-  screen_text_extractor: ^0.1.0
+  screen_text_extractor: ^0.1.1
 ```
 
 或
