@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'extract_mode.dart';
@@ -16,6 +17,24 @@ class ScreenTextExtractor {
   MethodChannel _channel = const MethodChannel('screen_text_extractor');
 
   ClipboardOnceWatcher _clipboardOnceWatcher = ClipboardOnceWatcher();
+
+  Future<bool> isAccessAllowed() async {
+    if (!kIsWeb && Platform.isMacOS) {
+      return await _channel.invokeMethod('isAccessAllowed');
+    }
+    return true;
+  }
+
+  Future<void> requestAccess({
+    bool onlyOpenPrefPane = false,
+  }) async {
+    if (!kIsWeb && Platform.isMacOS) {
+      final Map<String, dynamic> arguments = {
+        'onlyOpenPrefPane': onlyOpenPrefPane,
+      };
+      await _channel.invokeMethod('requestAccess', arguments);
+    }
+  }
 
   Future<ExtractedData?> extract({
     ExtractMode mode = ExtractMode.clipboard,
@@ -68,3 +87,5 @@ class ScreenTextExtractor {
     }
   }
 }
+
+final screenTextExtractor = ScreenTextExtractor.instance;
