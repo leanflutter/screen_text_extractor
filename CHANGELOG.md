@@ -1,3 +1,7 @@
+## 0.1.2
+
+* Recovery `isAccessAllowed` and `requestAccess` methods
+
 ## 0.1.1
 
 * [macos] Remove implementation via accessibility api
