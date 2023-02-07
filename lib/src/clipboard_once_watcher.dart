@@ -9,7 +9,7 @@ class ClipboardOnceWatcher with ClipboardListener {
     VoidCallback? onTimeout,
   }) async {
     this.onChange = onChange;
-    Future.delayed(Duration(milliseconds: 3000)).then((value) {
+    Future.delayed(const Duration(milliseconds: 3000)).then((value) {
       if (onTimeout != null) {
         onTimeout();
       }

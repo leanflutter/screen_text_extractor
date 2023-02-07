@@ -14,9 +14,9 @@ class ScreenTextExtractor {
   /// The shared instance of [ScreenTextExtractor].
   static final ScreenTextExtractor instance = ScreenTextExtractor._();
 
-  MethodChannel _channel = const MethodChannel('screen_text_extractor');
+  final MethodChannel _channel = const MethodChannel('screen_text_extractor');
 
-  ClipboardOnceWatcher _clipboardOnceWatcher = ClipboardOnceWatcher();
+  final ClipboardOnceWatcher _clipboardOnceWatcher = ClipboardOnceWatcher();
 
   Future<bool> isAccessAllowed() async {
     if (!kIsWeb && Platform.isMacOS) {

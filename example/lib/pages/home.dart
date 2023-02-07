@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -13,8 +15,10 @@ final kShortcutExtractFromScreenSelection =
     HotKey(KeyCode.keyX, modifiers: [KeyModifier.alt]);
 
 class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
@@ -65,14 +69,14 @@ class _HomePageState extends State<HomePage> {
     return PreferenceList(
       children: <Widget>[
         PreferenceListSection(
-          title: Text('METHODS'),
+          title: const Text('METHODS'),
           children: [
             PreferenceListItem(
-              title: Text('extractTextFromClipboard'),
+              title: const Text('extractTextFromClipboard'),
               detailText: Text(kShortcutExtractFromClipboard.toString()),
             ),
             PreferenceListItem(
-              title: Text('extractTextFromScreenSelection'),
+              title: const Text('extractTextFromScreenSelection'),
               detailText: Text(kShortcutExtractFromScreenSelection.toString()),
             ),
           ],
