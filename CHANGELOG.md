@@ -1,3 +1,7 @@
+## 0.1.3
+
+* chore: bump flutter 3.10.0 & bump clipboard_watcher to 0.2.0
+
 ## 0.1.2
 
 * Recovery `isAccessAllowed` and `requestAccess` methods

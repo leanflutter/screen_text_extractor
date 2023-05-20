@@ -47,7 +47,7 @@ Add this to your package's pubspec.yaml file:
 
 ```yaml
 dependencies:
-  screen_text_extractor: ^0.1.1
+  screen_text_extractor: ^0.1.3
 ```
 
 Or
